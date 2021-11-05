@@ -5,9 +5,7 @@ A simple proxy web server to save and serve remote, static content to a local cl
 ## Installation
 **1. Downloading the project :**
 
-You can use any of these methods :
-    - `git clone https://github.com/gulag1337/proxy-web-server`.
-    - Download and extract the zipped folder to a destination folder of your choice.
+You can either do `git clone https://github.com/gulag1337/proxy-web-server`, or you can download and extract the zipped folder to a destination folder of your choice.
 
 **2. Set-up :**
 

@@ -121,8 +121,9 @@ async def local_folder(rel_path: str, full_path: str) -> None:
     async with HTTPClient() as client:
         try:
             page_response = (await client.get(f"{remote_host}{rel_path}")).content()
+            response = await page_response
             #Asynchronously save file content in a different thread to prevent file I/O blocking
-            await to_thread(save_file, full_path, await page_response)                  
+            await to_thread(save_file, full_path, response)                  
         except Exception as e:
             print("Uh oh, something went wrong : ", e)
 

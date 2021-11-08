@@ -1,9 +1,9 @@
-from asyncio import to_thread
+from asyncio import to_thread, get_event_loop_policy
 from aiosonic import HTTPClient
-from aiohttp.web import Application, RouteTableDef, Request, Response, FileResponse, run_app
+from aiohttp.web import Application, RouteTableDef, Request, Response, FileResponse, AppRunner, TCPSite
 from os import path, makedirs
 
-remote_host = 'https://www.remote-host.com'     #Replace with your remote host URL
+remote_host = 'https://www.remote-host.com/'     #Replace with your remote host URL
 cwd = path.dirname(__file__)
 my_app = Application()
 routes = RouteTableDef()
@@ -11,12 +11,10 @@ routes = RouteTableDef()
 async def get_it(url: str) -> bytes:
     '''
     Performs a remote GET request.
-
     Parameters
     ----------
     url: str
         The remote URL to perform the GET request on
-
     Returns
     -------
     bytes
@@ -30,14 +28,12 @@ async def get_it(url: str) -> bytes:
 async def post_it(url: str, params: dict) -> bytes:
     '''
     Performs a remote POST request.
-
     Parameters
     ----------
     url: str
         The remote URL to POST
     params: dict
         The local POST request parameters
-
     Returns
     -------
     bytes
@@ -51,7 +47,6 @@ async def post_it(url: str, params: dict) -> bytes:
 def save_file(full_path: str, content: bytes) -> None:
     '''
     Saves the remote file locally.
-
     Parameters
     ----------
     full_path: str
@@ -68,7 +63,6 @@ def save_file(full_path: str, content: bytes) -> None:
 async def get_handler(request: Request) -> FileResponse:
     '''
     Handles basic GET requests to the remote host.
-
     Parameters
     ----------
     request : Request
@@ -91,12 +85,10 @@ async def get_handler(request: Request) -> FileResponse:
 async def post_handler(request: Request) -> Response:
     '''
     Handles basic POST requests to the remote host.
-
     Parameters
     ----------
     request : Request
         The local POST request
-
     Returns
     -------
     Response
@@ -110,7 +102,6 @@ async def post_handler(request: Request) -> Response:
 async def local_folder(rel_path: str, full_path: str) -> None:
     '''
     Retrieves and stores the remote file locally.
-
     Parameters
     ----------
     rel_path : str
@@ -127,10 +118,9 @@ async def local_folder(rel_path: str, full_path: str) -> None:
         except Exception as e:
             print("Uh oh, something went wrong : ", e)
 
-def main(host: str = '127.0.0.1', port: int = 80) -> None:
+async def main(host: str = '127.0.0.1', port: int = 80) -> None:
     '''
     Runs the web server.
-
     Parameters
     ----------
     host : str
@@ -141,7 +131,15 @@ def main(host: str = '127.0.0.1', port: int = 80) -> None:
         Defaults to 80 if not supplied
     '''
     my_app.add_routes(routes)
-    run_app(my_app, host=host, port=port)
+    runner = AppRunner(my_app)
+    await runner.setup()
+    site = TCPSite(runner, host=host, port=port)
+    await site.start()
+    print('-------------------------------')
+    print(f"Web server started on {host}:{port}")
+    print('-------------------------------')
+    await site._server.wait_closed()
 
 if __name__ == '__main__':
-    main()
+    loop = get_event_loop_policy().get_event_loop()
+    loop.run_until_complete(main())
